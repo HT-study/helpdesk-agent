@@ -1,4 +1,4 @@
-# 🤖 DSH — AI Agent Desktop 桌面运维助手
+#  AI Agent Desktop 桌面运维助手
 
 > **基于 LangGraph ReAct Agent + Flask + SQLite 的本地 AI 运维桌面应用**
 >
