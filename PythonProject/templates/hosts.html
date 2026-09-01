@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🖥️ 远程主机 — 桌面运维助手</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+:root{
+  --primary:#4a6cf7;--primary-hover:#3a5de7;
+  --bg:#f0f2f5;--bg-card:#fff;--text:#1a1a2e;--text-secondary:#6c757d;--border:#e2e8f0;
+  --shadow:0 4px 20px rgba(0,0,0,.08);
+  --success:#28a745;--danger:#dc3545;--warn:#ffc107;
+}
+[data-theme="dark"]{
+  --bg:#0f1419;--bg-card:#1a2027;--text:#e1e7ef;--text-secondary:#8b93a1;--border:#2d353f;--shadow:0 4px 20px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:24px;transition:background .3s,color .3s}
+.container{max-width:960px;margin:0 auto}
+.page-header{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.page-header a{text-decoration:none;color:var(--primary);font-weight:600;font-size:15px}
+.page-header h1{font-size:24px;margin-left:auto;color:var(--text)}
+.card{background:var(--bg-card);border-radius:14px;box-shadow:var(--shadow);padding:20px;margin-bottom:16px}
+h2.card-title{font-size:16px;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:6px}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:10px 12px;border:2px solid var(--border);border-radius:8px;font-size:14px;background:var(--bg-card);color:var(--text);outline:none;font-family:inherit}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--primary)}
+.form-group textarea{min-height:80px;resize:vertical;font-family:'Consolas',monospace;font-size:12px}
+.btn{padding:10px 20px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s}
+.btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:var(--primary-hover)}
+.btn-secondary{background:var(--tool-bg);color:var(--text);border:1px solid var(--border)}.btn-secondary:hover{background:var(--border)}
+.btn-danger{background:var(--danger);color:#fff}.btn-danger:hover{background:#c82333}
+.btn-row{display:flex;gap:10px;margin-top:8px}
+.host-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.host-card{border:1px solid var(--border);border-radius:12px;padding:16px;transition:border-color .2s}
+.host-card:hover{border-color:var(--primary)}
+.host-card .hdr{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.host-card .hdr .label{font-size:15px;font-weight:600;color:var(--text)}
+.host-card .hdr .status{width:8px;height:8px;border-radius:50%;margin-left:auto;flex-shrink:0}
+.host-card .hdr .status.online{background:var(--success)}
+.host-card .hdr .status.offline{background:var(--danger)}
+.host-card .hdr .status.unknown{background:var(--text-secondary)}
+.host-card .detail{font-size:13px;color:var(--text-secondary);line-height:1.6}
+.host-card .actions{display:flex;gap:8px;margin-top:10px}
+.host-card .actions .btn{padding:6px 14px;font-size:12px}
+.empty{text-align:center;color:var(--text-secondary);padding:40px;font-size:14px}
+.toast{position:fixed;top:20px;right:20px;background:var(--bg-card);color:var(--text);border:1px solid var(--border);padding:12px 18px;border-radius:10px;box-shadow:var(--shadow);font-size:14px;z-index:1000;transform:translateX(120%);transition:transform .3s}
+.toast.show{transform:translateX(0)}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="page-header">
+    <a href="/">← 返回聊天</a>
+    <h1>🖥️ 远程主机管理</h1>
+  </div>
+
+  <!-- 新增表单 -->
+  <div class="card">
+    <h2 class="card-title"><i class="fas fa-plus-circle" style="color:var(--primary)"></i> <span id="formTitle">新增主机</span></h2>
+    <div class="form-row">
+      <div class="form-group">
+        <label>标签（唯一标识）</label>
+        <input type="text" id="inpLabel" placeholder="例如：web-01" />
+      </div>
+      <div class="form-group">
+        <label>主机地址</label>
+        <input type="text" id="inpHostname" placeholder="192.168.1.100 或 host.example.com" />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>端口</label>
+        <input type="number" id="inpPort" value="22" />
+      </div>
+      <div class="form-group">
+        <label>用户名</label>
+        <input type="text" id="inpUsername" placeholder="root" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label>认证方式</label>
+      <select id="inpAuthType" onchange="toggleAuth()">
+        <option value="password">密码登录</option>
+        <option value="key">SSH 密钥登录</option>
+      </select>
+    </div>
+    <div class="form-group" id="passwordGroup">
+      <label>SSH 密码</label>
+      <input type="password" id="inpPassword" placeholder="请输入 SSH 密码" />
+    </div>
+    <div class="form-group" id="keyGroup" style="display:none">
+      <label>SSH 私钥内容（含 -----BEGIN...----- 和 -----END...-----）</label>
+      <textarea id="inpKey" placeholder="-----BEGIN RSA PRIVATE KEY-----\n...\n-----END RSA PRIVATE KEY-----"></textarea>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="saveHost()"><i class="fas fa-save"></i> 保存</button>
+      <button class="btn btn-secondary" id="cancelBtn" onclick="cancelEdit()" style="display:none">取消</button>
+    </div>
+  </div>
+
+  <!-- 主机列表 -->
+  <div class="card">
+    <h2 class="card-title"><i class="fas fa-server" style="color:var(--primary)"></i> 已配置主机</h2>
+    <div class="host-grid" id="hostGrid"><div class="empty">加载中...</div></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+let editId = null;
+
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000);}
+function escapeHtml(s){if(!s)return '';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function toggleAuth(){
+  const type = document.getElementById('inpAuthType').value;
+  document.getElementById('passwordGroup').style.display = type === 'password' ? '' : 'none';
+  document.getElementById('keyGroup').style.display = type === 'key' ? '' : 'none';
+}
+
+function cancelEdit(){
+  editId = null;
+  document.getElementById('formTitle').textContent = '新增主机';
+  document.getElementById('cancelBtn').style.display = 'none';
+  document.getElementById('inpLabel').value = '';
+  document.getElementById('inpHostname').value = '';
+  document.getElementById('inpPort').value = '22';
+  document.getElementById('inpUsername').value = '';
+  document.getElementById('inpPassword').value = '';
+  document.getElementById('inpKey').value = '';
+}
+
+async function loadHosts(){
+  try{
+    const res = await fetch('/hosts/list');
+    const data = await res.json();
+    const hosts = data.hosts || [];
+    const grid = document.getElementById('hostGrid');
+    if(hosts.length === 0){
+      grid.innerHTML = '<div class="empty">未配置远程主机，请在上方添加</div>'; return;
+    }
+    grid.innerHTML = hosts.map(h => `
+      <div class="host-card">
+        <div class="hdr">
+          <span class="label">${escapeHtml(h.label)}</span>
+          <span class="status unknown" id="status_${h.id}" title="未检测"></span>
+        </div>
+        <div class="detail">
+          <i class="fas fa-globe" style="font-size:12px;opacity:.5"></i> ${escapeHtml(h.hostname)}:${h.port}<br>
+          <i class="fas fa-user" style="font-size:12px;opacity:.5"></i> ${escapeHtml(h.username)} (${h.auth_type === 'key' ? '密钥' : '密码'})
+        </div>
+        <div class="actions">
+          <button class="btn btn-secondary" onclick="testHost(${h.id})"><i class="fas fa-plug"></i> 测试</button>
+          <button class="btn btn-secondary" onclick="editHost(${h.id})"><i class="fas fa-pen"></i> 编辑</button>
+          <button class="btn btn-danger" onclick="deleteHost(${h.id})"><i class="fas fa-trash"></i> 删除</button>
+        </div>
+      </div>`).join('');
+  }catch(e){ document.getElementById('hostGrid').innerHTML = '<div class="empty">加载失败: '+escapeHtml(e.message)+'</div>'; }
+}
+
+async function saveHost(){
+  const label = document.getElementById('inpLabel').value.trim();
+  const hostname = document.getElementById('inpHostname').value.trim();
+  const port = parseInt(document.getElementById('inpPort').value) || 22;
+  const username = document.getElementById('inpUsername').value.trim();
+  const authType = document.getElementById('inpAuthType').value;
+  const credential = authType === 'password' ? document.getElementById('inpPassword').value : document.getElementById('inpKey').value;
+
+  if(!label || !hostname || !username || !credential){ toast('请填写所有必填字段'); return; }
+  try{
+    const res = await fetch('/hosts/save',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({id:editId,label,hostname,port,username,auth_type:authType,credential})});
+    const data = await res.json();
+    if(data.status==='ok'){ toast('已保存'); cancelEdit(); loadHosts(); }
+    else toast(data.error || '保存失败');
+  }catch(e){ toast('保存失败: '+e.message); }
+}
+
+async function testHost(id){
+  const statusEl = document.getElementById('status_'+id);
+  if(!statusEl) return;
+  statusEl.className = 'status'; statusEl.style.background = 'var(--warn)';
+  try{
+    const res = await fetch('/hosts/test',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});
+    const data = await res.json();
+    if(data.status==='ok' && data.success){
+      statusEl.className = 'status online'; statusEl.title = data.message || '在线';
+    } else {
+      statusEl.className = 'status offline'; statusEl.title = data.message || '离线';
+    }
+  }catch(e){ statusEl.className = 'status offline'; statusEl.title = '测试失败'; }
+}
+
+async function editHost(id){
+  try{
+    const res = await fetch('/hosts/list');
+    const data = await res.json();
+    const h = (data.hosts||[]).find(x => x.id === id);
+    if(!h){ toast('未找到主机'); return; }
+    editId = id;
+    document.getElementById('formTitle').textContent = '编辑主机';
+    document.getElementById('cancelBtn').style.display = '';
+    document.getElementById('inpLabel').value = h.label;
+    document.getElementById('inpHostname').value = h.hostname;
+    document.getElementById('inpPort').value = h.port;
+    document.getElementById('inpUsername').value = h.username;
+    document.getElementById('inpAuthType').value = h.auth_type;
+    toggleAuth();
+  }catch(e){ toast('编辑失败: '+e.message); }
+}
+
+async function deleteHost(id){
+  if(!confirm('确定删除该主机？')) return;
+  try{
+    const res = await fetch('/hosts/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});
+    const data = await res.json();
+    if(data.status==='ok'){ toast('已删除'); loadHosts(); }
+    else toast(data.error || '删除失败');
+  }catch(e){ toast('删除失败: '+e.message); }
+}
+
+(function(){
+  const saved = localStorage.getItem('dsh_theme_v1');
+  const dark = saved !== null ? saved==='dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+  if(dark) document.documentElement.setAttribute('data-theme','dark');
+})();
+
+loadHosts();
+</script>
+</body>
+</html>

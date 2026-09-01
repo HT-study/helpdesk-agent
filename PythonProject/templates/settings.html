@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚙️ LLM 设置 — 桌面运维助手</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(160deg, #f6f7fb 0%, #eef1f8 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 920px; margin: 0 auto; }
+        .page-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            padding: 16px 20px;
+            background: #fff;
+            border-radius: 14px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+        }
+        .page-header a {
+            text-decoration: none;
+            color: #4a6cf7;
+            font-size: 14px;
+            font-weight: 600;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: background .15s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .page-header a:hover { background: #eef1ff; }
+        .page-header h1 {
+            color: #1a1a2e;
+            font-size: 22px;
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .page-header h1 .sub {
+            font-size: 13px;
+            font-weight: 400;
+            color: #9aa3b2;
+        }
+
+        /* Config list bar */
+        .config-bar {
+            background: white;
+            border-radius: 14px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            padding: 16px 20px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .config-bar-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #495057;
+            flex-shrink: 0;
+        }
+        .config-bar-count {
+            font-size: 12px;
+            color: #6c757d;
+            margin-left: 4px;
+        }
+        .config-list {
+            display: flex;
+            gap: 8px;
+            flex: 1;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .config-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+            background: #f8f9fc;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 13px;
+        }
+        .config-item:hover { border-color: #4a6cf7; }
+        .config-item.active {
+            border-color: #4a6cf7;
+            background: #eef1ff;
+            box-shadow: 0 0 0 2px rgba(74,108,247,0.15);
+        }
+        .config-item .ci-icon {
+            font-size: 13px;
+            width: 26px;
+            height: 26px;
+            border-radius: 7px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            color: #fff;
+        }
+        .config-item .ci-name { font-weight: 600; color: #1a1a2e; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .config-item .ci-provider { font-size: 11px; color: #6c757d; }
+        .config-item .ci-active {
+            font-size: 10px;
+            color: #4a6cf7;
+            font-weight: 700;
+        }
+        .config-item .ci-del {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: transparent;
+            border: none;
+            color: #adb5bd;
+            cursor: pointer;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .config-item .ci-del:hover { background: #f8d7da; color: #dc3545; }
+        .config-item.active .ci-del:hover { background: #f8d7da; color: #dc3545; }
+
+        .btn-add-config {
+            padding: 6px 14px;
+            border-radius: 8px;
+            border: 2px dashed #adb5bd;
+            background: transparent;
+            color: #6c757d;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .btn-add-config:hover { border-color: #4a6cf7; color: #4a6cf7; }
+
+        /* Card */
+        .card {
+            background: white;
+            border-radius: 14px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            padding: 24px;
+            margin-bottom: 16px;
+        }
+        .card-title {
+            font-size: 17px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Provider grid */
+        .provider-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+        @media (max-width: 700px) { .provider-grid { grid-template-columns: repeat(2, 1fr); } }
+        .provider-card {
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 16px 10px 14px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #fff;
+        }
+        .provider-card:hover { border-color: #4a6cf7; background: #f4f6ff; transform: translateY(-1px); }
+        .provider-card.active {
+            border-color: #4a6cf7;
+            background: #eef1ff;
+            box-shadow: 0 0 0 2px rgba(74,108,247,0.15);
+        }
+        .provider-icon {
+            width: 46px;
+            height: 46px;
+            border-radius: 13px;
+            margin: 0 auto 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 19px;
+            color: #fff;
+            box-shadow: inset 0 -4px 8px rgba(0,0,0,.12);
+        }
+        .provider-name { font-size: 13px; font-weight: 600; color: #1a1a2e; }
+        .provider-desc { font-size: 10px; color: #6c757d; margin-top: 2px; }
+        /* Brand colors */
+        .brand-deepseek { background: linear-gradient(135deg, #4d6bfe, #6a8bff); }
+        .brand-openai { background: linear-gradient(135deg, #10a37f, #34c39b); }
+        .brand-anthropic { background: linear-gradient(135deg, #cc785c, #e0a98f); }
+        .brand-compat { background: linear-gradient(135deg, #6366f1, #a855f7); }
+
+        /* Form */
+        .form-group { margin-bottom: 14px; }
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 5px;
+        }
+        .form-group .hint { font-size: 11px; color: #999; margin-top: 3px; }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 11px 14px;
+            border: 2px solid #e4e8f0;
+            border-radius: 10px;
+            font-size: 13px;
+            color: #1f2937;
+            background: #fbfcfe;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+        }
+        .form-group input:focus, .form-group select:focus {
+            border-color: #4a6cf7;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(74,108,247,0.12);
+        }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .range-group { display: flex; align-items: center; gap: 10px; }
+        .range-group input[type="range"] { flex: 1; accent-color: #4a6cf7; }
+        .range-group .range-value { min-width: 40px; text-align: center; font-weight: 600; color: #4a6cf7; font-size: 14px; }
+
+        /* Buttons */
+        .btn-row { display: flex; gap: 10px; margin-top: 6px; flex-wrap: wrap; }
+        .btn {
+            padding: 10px 22px;
+            border: none;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            color: white;
+            box-shadow: 0 4px 14px rgba(99,102,241,.3);
+        }
+        .btn-primary:hover { background: linear-gradient(135deg, #4f46e5, #4338ca); transform: translateY(-1px); }
+        .btn-secondary { background: #f4f6f9; color: #495057; }
+        .btn-secondary:hover { background: #e2e8f0; }
+        .btn-success { background: linear-gradient(135deg, #22c55e, #16a34a); color: white; box-shadow: 0 4px 14px rgba(34,197,94,.3); }
+        .btn-success:hover { background: linear-gradient(135deg, #16a34a, #15803d); }
+        .btn-danger { background: #ef4444; color: white; }
+        .btn-danger:hover { background: #dc2626; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        /* Status */
+        .status-box {
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-top: 10px;
+            display: none;
+        }
+        .status-box.ok { display: block; background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .status-box.error { display: block; background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .status-box.loading { display: block; background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+
+        /* Config info */
+        .config-info {
+            background: #f8f9fc;
+            border-radius: 10px;
+            padding: 14px 16px;
+            margin-top: 14px;
+            font-size: 13px;
+            color: #495057;
+            border: 1px solid #e9ecef;
+        }
+        .config-info .row { display: flex; justify-content: space-between; padding: 4px 0; }
+        .config-info .row + .row { border-top: 1px solid #e9ecef; }
+        .config-info .label { color: #6c757d; }
+        .config-info .value { font-weight: 600; color: #1a1a2e; }
+        .key-hidden { color: #6c757d; font-family: monospace; }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal-card {
+            background: white;
+            border-radius: 14px;
+            padding: 24px;
+            max-width: 440px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .modal-title { font-size: 17px; font-weight: 700; margin-bottom: 12px; color: #1a1a2e; }
+        .modal-msg { font-size: 14px; color: #495057; margin-bottom: 16px; line-height: 1.5; }
+        .modal-btns { display: flex; gap: 10px; justify-content: flex-end; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="page-header">
+            <a href="/" onclick="event.preventDefault(); window.location='/';"><i class="fas fa-arrow-left"></i> 返回聊天</a>
+            <h1><i class="fas fa-sliders" style="color:#6366f1"></i> LLM 设置 <span class="sub">· 模型与 API 配置</span></h1>
+        </div>
+
+        <!-- Config list bar -->
+        <div class="config-bar">
+            <span class="config-bar-label"><i class="fas fa-layer-group"></i> API 配置</span>
+            <span class="config-bar-count" id="configCount"></span>
+            <div class="config-list" id="configList"></div>
+            <button class="btn-add-config" onclick="showAddConfig()">
+                <i class="fas fa-plus"></i> 新增配置
+            </button>
+        </div>
+
+        <!-- Edit form -->
+        <div class="card" id="editCard" style="display:none">
+            <div class="card-title">
+                <i class="fas fa-pen"></i>
+                <span id="editTitle">编辑配置</span>
+            </div>
+
+            <div class="provider-grid" id="providerGrid">
+                <div class="provider-card" data-provider="deepseek">
+                    <div class="provider-icon brand-deepseek"><i class="fas fa-database"></i></div>
+                    <div class="provider-name">DeepSeek</div>
+                    <div class="provider-desc">DeepSeek 官方</div>
+                </div>
+                <div class="provider-card" data-provider="openai">
+                    <div class="provider-icon brand-openai"><i class="fas fa-robot"></i></div>
+                    <div class="provider-name">OpenAI</div>
+                    <div class="provider-desc">gpt-4o 等</div>
+                </div>
+                <div class="provider-card" data-provider="anthropic">
+                    <div class="provider-icon brand-anthropic"><i class="fas fa-bolt"></i></div>
+                    <div class="provider-name">Anthropic</div>
+                    <div class="provider-desc">Claude 系列</div>
+                </div>
+                <div class="provider-card" data-provider="openai_compatible">
+                    <div class="provider-icon brand-compat"><i class="fas fa-puzzle-piece"></i></div>
+                    <div class="provider-name">OpenAI 兼容</div>
+                    <div class="provider-desc">Sensenova 等</div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="cfgName">配置名称</label>
+                <input type="text" id="cfgName" placeholder="如：主配置 / 备用配置" />
+            </div>
+
+            <div class="form-group">
+                <label for="cfgApiKey">API Key</label>
+                <input type="password" id="cfgApiKey" placeholder="sk-xxxxxxxxxxxxxxxx" />
+                <div class="hint" id="cfgKeyHint">留空则保留已保存的 Key</div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="cfgBaseUrl">Base URL</label>
+                    <input type="text" id="cfgBaseUrl" placeholder="https://api.openai.com/v1" />
+                    <div class="hint">留空则使用提供商默认地址</div>
+                </div>
+                <div class="form-group">
+                    <label for="cfgModel">模型名称</label>
+                    <input type="text" id="cfgModel" placeholder="deepseek-chat" />
+                    <div class="hint">请填写完整的模型名</div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="cfgTemp">Temperature</label>
+                <div class="range-group">
+                    <input type="range" id="cfgTemperature" min="0" max="1" step="0.05" value="0.5" />
+                    <span class="range-value" id="cfgTempValue">0.50</span>
+                </div>
+            </div>
+
+            <div class="btn-row">
+                <button class="btn btn-secondary" id="testBtn" onclick="testConnection()">
+                    <i class="fas fa-search"></i> 测试连接
+                </button>
+                <button class="btn btn-primary" id="saveBtn" onclick="saveConfig()">
+                    <i class="fas fa-save"></i> <span id="saveBtnText">保存配置</span>
+                </button>
+                <button class="btn btn-success" id="activateBtn" onclick="activateConfig()" style="display:none">
+                    <i class="fas fa-bolt"></i> 激活并重建
+                </button>
+                <button class="btn btn-secondary" id="cancelBtn" onclick="hideEdit()">
+                    <i class="fas fa-times"></i> 取消
+                </button>
+            </div>
+
+            <div class="status-box" id="statusBox"></div>
+        </div>
+
+        <!-- Current active config summary -->
+        <div class="card">
+            <div class="card-title"><i class="fas fa-info-circle"></i> 当前激活配置</div>
+            <div class="config-info" id="configSummary">
+                <div class="row"><span class="label">配置</span><span class="value" id="curName">—</span></div>
+                <div class="row"><span class="label">提供商</span><span class="value" id="curProvider">—</span></div>
+                <div class="row"><span class="label">模型</span><span class="value" id="curModel">—</span></div>
+                <div class="row"><span class="label">Base URL</span><span class="value" id="curBaseUrl">—</span></div>
+                <div class="row"><span class="label">Temperature</span><span class="value" id="curTemp">—</span></div>
+                <div class="row"><span class="label">API Key</span><span class="value" id="curKey"><span class="key-hidden">未设置</span></span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete confirm modal -->
+    <div class="modal-overlay" id="deleteModal" onclick="if(event.target===this)closeDeleteModal()">
+        <div class="modal-card">
+            <div class="modal-title">🗑️ 确认删除</div>
+            <div class="modal-msg" id="deleteMsg"></div>
+            <div class="modal-btns">
+                <button class="btn btn-secondary" onclick="closeDeleteModal()">取消</button>
+                <button class="btn btn-danger" id="confirmDeleteBtn">
+                    <i class="fas fa-trash"></i> 确认删除
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // ============================================================
+    // State
+    // ============================================================
+    const API_BASE = '';
+    const API_TOKEN = '';
+
+    let configs = [];
+    let editingConfigId = null;
+    let editingIsNew = false;
+    let selectedProvider = null;
+
+    const PROVIDER_DEFAULTS = {
+        deepseek:          { model: 'deepseek-chat', baseUrl: '' },
+        openai:            { model: 'gpt-4o', baseUrl: 'https://api.openai.com/v1' },
+        anthropic:         { model: 'claude-sonnet-4-20250514', baseUrl: 'https://api.anthropic.com' },
+        openai_compatible: { model: 'sensenova-6.8-flash-lite', baseUrl: 'https://token.sensenova.cn/v1' },
+    };
+
+    const PROVIDER_ICONS = {
+        deepseek: 'fa-database',
+        openai: 'fa-robot',
+        anthropic: 'fa-bolt',
+        openai_compatible: 'fa-puzzle-piece',
+    };
+    const PROVIDER_BRAND = {
+        deepseek: 'brand-deepseek',
+        openai: 'brand-openai',
+        anthropic: 'brand-anthropic',
+        openai_compatible: 'brand-compat',
+    };
+
+    // ============================================================
+    // API helpers
+    // ============================================================
+    async function apiRequest(url, method, body) {
+        const opts = { method, headers: { 'Content-Type': 'application/json' } };
+        if (body !== undefined) opts.body = JSON.stringify(body);
+        const res = await fetch(API_BASE + url, opts);
+        let data;
+        try {
+            data = await res.json();
+        } catch (jsonError) {
+            // 非 JSON 响应（如 HTML 错误页），读取原文
+            const text = await res.text();
+            throw new Error(`服务器返回 ${res.status}: ${text.substring(0, 200)}`);
+        }
+        if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+        return data;
+    }
+
+    // ============================================================
+    // Load configs
+    // ============================================================
+    async function loadConfigs(silent) {
+        try {
+            const data = await apiRequest('/settings/configs', 'GET');
+            configs = data.configs || [];
+            renderConfigBar();
+            renderActiveSummary();
+        } catch (e) {
+            // 如果新 API 不存在，回退到旧 API
+            try {
+                const data = await apiRequest('/settings/load', 'GET');
+                if (data.configs && data.configs.length > 0) {
+                    configs = data.configs;
+                } else if (data.provider) {
+                    configs = [{
+                        id: 'auto',
+                        name: '主配置',
+                        provider: data.provider,
+                        model: data.model || '',
+                        base_url: data.base_url || '',
+                        api_key: '',
+                        has_key: data.has_key || false,
+                        temperature: data.temperature || 0.5,
+                        active: true,
+                    }];
+                }
+                renderConfigBar();
+                renderActiveSummary();
+            } catch (e2) {
+                if (!silent) showStatus('加载配置失败: ' + e2.message, 'error');
+            }
+        }
+    }
+
+    // ============================================================
+    // Render config bar
+    // ============================================================
+    function renderConfigBar() {
+        const list = document.getElementById('configList');
+        document.getElementById('configCount').textContent = `(${configs.length} 条)`;
+
+        list.innerHTML = configs.map((c, i) => {
+            const fa = PROVIDER_ICONS[c.provider] || 'fa-database';
+            const brand = PROVIDER_BRAND[c.provider] || 'brand-compat';
+            return `<div class="config-item ${c.active ? 'active' : ''}" onclick="selectConfig('${c.id}')">
+                <span class="ci-icon ${brand}"><i class="fas ${fa}"></i></span>
+                <span class="ci-name">${escapeHtml(c.name || '配置 ' + (i+1))}</span>
+                <span class="ci-provider">${escapeHtml(c.provider)}</span>
+                ${c.active ? '<span class="ci-active" title="当前激活"><i class="fas fa-circle-check"></i></span>' : ''}
+                <button class="ci-del" onclick="event.stopPropagation();confirmDelete('${c.id}')" title="删除"><i class="fas fa-times"></i></button>
+            </div>`;
+        }).join('');
+    }
+
+    function renderActiveSummary() {
+        const active = configs.find(c => c.active) || configs[0];
+        if (!active) return;
+
+        document.getElementById('curName').textContent = active.name || '—';
+        document.getElementById('curProvider').textContent = active.provider || '—';
+        document.getElementById('curModel').textContent = active.model || '—';
+        document.getElementById('curBaseUrl').textContent = active.base_url || '（默认）';
+        document.getElementById('curTemp').textContent = active.temperature || '—';
+        document.getElementById('curKey').innerHTML = active.has_key
+            ? `<span class="key-hidden">${active.api_key}</span>`
+            : '<span class="key-hidden">未设置</span>';
+    }
+
+    // ============================================================
+    // Config selection / edit
+    // ============================================================
+    function selectConfig(id) {
+        const cfg = configs.find(c => c.id === id);
+        if (!cfg) return;
+
+        editingConfigId = id;
+        editingIsNew = false;
+        selectedProvider = cfg.provider;
+
+        document.getElementById('cfgName').value = cfg.name || '';
+        document.getElementById('cfgApiKey').value = '';
+        document.getElementById('cfgBaseUrl').value = cfg.base_url || '';
+        document.getElementById('cfgModel').value = cfg.model || '';
+        document.getElementById('cfgTemperature').value = cfg.temperature || 0.5;
+        document.getElementById('cfgTempValue').textContent = parseFloat(cfg.temperature || 0.5).toFixed(2);
+        document.getElementById('cfgKeyHint').textContent = '留空则保留已保存的 Key';
+
+        // Provider cards
+        document.querySelectorAll('.provider-card').forEach(c => {
+            c.classList.toggle('active', c.dataset.provider === cfg.provider);
+        });
+
+        document.getElementById('editTitle').textContent = '编辑配置';
+        document.getElementById('saveBtnText').textContent = '保存修改';
+        document.getElementById('activateBtn').style.display = cfg.active ? 'none' : 'flex';
+        document.getElementById('editCard').style.display = 'block';
+        document.getElementById('editCard').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function showAddConfig() {
+        editingConfigId = null;
+        editingIsNew = true;
+
+        document.getElementById('cfgName').value = '';
+        document.getElementById('cfgApiKey').value = '';
+        document.getElementById('cfgBaseUrl').value = '';
+        document.getElementById('cfgModel').value = '';
+        document.getElementById('cfgTemperature').value = '0.5';
+        document.getElementById('cfgTempValue').textContent = '0.50';
+        document.getElementById('cfgKeyHint').textContent = '请输入 API Key';
+
+        // 默认选中 DeepSeek
+        selectedProvider = 'deepseek';
+        document.querySelectorAll('.provider-card').forEach(c => {
+            c.classList.toggle('active', c.dataset.provider === 'deepseek');
+        });
+        applyProviderDefaults('deepseek');
+
+        document.getElementById('editTitle').textContent = '新增配置';
+        document.getElementById('saveBtnText').textContent = '新增并保存';
+        document.getElementById('activateBtn').style.display = 'none';
+        document.getElementById('editCard').style.display = 'block';
+        document.getElementById('editCard').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function hideEdit() {
+        document.getElementById('editCard').style.display = 'none';
+        editingConfigId = null;
+    }
+
+    // ============================================================
+    // Provider card clicks
+    // ============================================================
+    document.getElementById('providerGrid').addEventListener('click', (e) => {
+        const card = e.target.closest('.provider-card');
+        if (!card) return;
+        document.querySelectorAll('.provider-card').forEach(c => c.classList.remove('active'));
+        card.classList.add('active');
+        selectedProvider = card.dataset.provider;
+        applyProviderDefaults(selectedProvider);
+    });
+
+    function applyProviderDefaults(provider) {
+        const defaults = PROVIDER_DEFAULTS[provider] || {};
+        if (defaults.model && !document.getElementById('cfgModel').value) {
+            document.getElementById('cfgModel').value = defaults.model;
+        }
+        if (defaults.baseUrl !== undefined && !document.getElementById('cfgBaseUrl').value) {
+            document.getElementById('cfgBaseUrl').value = defaults.baseUrl;
+        }
+    }
+
+    // ============================================================
+    // Temperature
+    // ============================================================
+    document.getElementById('cfgTemperature').addEventListener('input', (e) => {
+        document.getElementById('cfgTempValue').textContent = parseFloat(e.target.value).toFixed(2);
+    });
+
+    // ============================================================
+    // Save / Create config
+    // ============================================================
+    async function saveConfig() {
+        const btn = document.getElementById('saveBtn');
+        const model = document.getElementById('cfgModel').value.trim();
+        const apiKey = document.getElementById('cfgApiKey').value.trim();
+
+        if (!selectedProvider) { showStatus('请先选择 LLM 提供商', 'error'); return; }
+        if (!model) { showStatus('模型名称不能为空', 'error'); return; }
+        if (editingIsNew && !apiKey) { showStatus('新增配置必须填写 API Key', 'error'); return; }
+
+        showStatus('正在保存...', 'loading');
+        btn.disabled = true;
+
+        try {
+            const body = {
+                provider: selectedProvider,
+                api_key: apiKey,
+                base_url: document.getElementById('cfgBaseUrl').value.trim(),
+                model: model,
+                temperature: parseFloat(document.getElementById('cfgTemperature').value),
+                name: document.getElementById('cfgName').value.trim(),
+            };
+
+            if (editingIsNew) {
+                await apiRequest('/settings/configs', 'POST', body);
+                showStatus('✅ 配置已新增', 'ok');
+            } else {
+                await apiRequest(`/settings/configs/${editingConfigId}`, 'PUT', body);
+                showStatus('✅ 配置已更新', 'ok');
+            }
+
+            hideEdit();
+            // 刷新列表（静默模式：失败不覆盖保存成功的提示）
+            loadConfigs(true);
+        } catch (e) {
+            console.error('保存配置失败:', e);
+            showStatus('❌ ' + e.message, 'error');
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    // ============================================================
+    // Activate config
+    // ============================================================
+    async function activateConfig() {
+        if (!editingConfigId) return;
+        showStatus('正在激活并重建 Agent...', 'loading');
+        try {
+            await apiRequest(`/settings/configs/${editingConfigId}/activate`, 'PATCH');
+            showStatus('✅ 配置已激活，Agent 已重建', 'ok');
+            loadConfigs(true);
+        } catch (e) {
+            showStatus('❌ ' + e.message, 'error');
+        }
+    }
+
+    // ============================================================
+    // Delete config
+    // ============================================================
+    let deleteTargetId = null;
+    function confirmDelete(id) {
+        deleteTargetId = id;
+        const cfg = configs.find(c => c.id === id);
+        const name = cfg ? cfg.name : id;
+        document.getElementById('deleteMsg').innerHTML =
+            `<p>确定要删除配置 <strong>${escapeHtml(name)}</strong> 吗？</p>
+             <p style="margin-top:8px;color:#6c757d;font-size:12px">
+                ${cfg && cfg.active ? '⚠️ 当前激活配置被删除后，将自动激活另一条配置。' : '此操作不可恢复。'}</p>`;
+        document.getElementById('deleteModal').classList.add('show');
+    }
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').classList.remove('show');
+        deleteTargetId = null;
+    }
+    document.getElementById('confirmDeleteBtn').addEventListener('click', async () => {
+        if (!deleteTargetId) return;
+        try {
+            await apiRequest(`/settings/configs/${deleteTargetId}`, 'DELETE');
+            closeDeleteModal();
+            loadConfigs(true);
+        } catch (e) {
+            showStatus('❌ ' + e.message, 'error');
+        }
+    });
+
+    // ============================================================
+    // Test connection
+    // ============================================================
+    async function testConnection() {
+        const btn = document.getElementById('testBtn');
+        if (!selectedProvider) { showStatus('请先选择 LLM 提供商', 'error'); return; }
+        const model = document.getElementById('cfgModel').value.trim();
+        if (!model) { showStatus('模型名称不能为空', 'error'); return; }
+
+        showStatus('正在测试连接...', 'loading');
+        btn.disabled = true;
+
+        try {
+            const res = await fetch('/settings/test', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    provider: selectedProvider,
+                    api_key: document.getElementById('cfgApiKey').value.trim(),
+                    base_url: document.getElementById('cfgBaseUrl').value.trim(),
+                    model: model,
+                    temperature: parseFloat(document.getElementById('cfgTemperature').value),
+                    config_id: editingConfigId || '',
+                }),
+            });
+            const data = await res.json();
+            if (data.status === 'ok') {
+                showStatus(`✅ ${data.message}${data.test_reply ? ' — 回复: ' + data.test_reply : ''}`, 'ok');
+            } else {
+                showStatus(`❌ ${data.message}`, 'error');
+            }
+        } catch (e) {
+            showStatus('❌ 网络错误: ' + e.message, 'error');
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    // ============================================================
+    // Helpers
+    // ============================================================
+    function showStatus(msg, type) {
+        const box = document.getElementById('statusBox');
+        box.textContent = msg;
+        box.className = 'status-box ' + type;
+        if (type === 'ok' || type === 'error') {
+            setTimeout(() => { box.className = 'status-box'; }, 5000);
+        }
+    }
+
+    function escapeHtml(s) {
+        if (!s) return '';
+        return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    // ============================================================
+    // Init
+    // ============================================================
+    loadConfigs();
+    </script>
+</body>
+</html>

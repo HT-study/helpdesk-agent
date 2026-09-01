@@ -1,0 +1,41 @@
+# Python 桌面运维 AI 助手 — 依赖清单
+# 注意：实际运行使用的是系统 Python 3.11，安装时请确认版本。
+# 版本号建议在干净环境用 pip freeze 核实后锁定。
+
+# Web 框架
+flask>=3.0
+flask-cors>=4.0
+
+# LLM / Agent 编排
+langchain-deepseek>=0.1
+langchain-openai>=0.1       # OpenAI / OpenAI 兼容（Sensenova 等）
+langchain-anthropic>=0.1    # Anthropic Claude
+langgraph>=0.2
+
+# 其他 LLM SDK（用于 test.py 连通性测试）
+openai>=1.0
+
+# 文件处理
+PyYAML>=6.0
+pandas>=2.0
+openpyxl>=3.1
+python-docx>=1.0
+PyPDF2>=3.0
+Pillow>=10.0
+
+# PDF 图片提取（可选，安装后 PDF 导入时自动提取图片）
+# PyMuPDF>=1.0
+
+# 重试 / 配置
+tenacity>=8.0
+python-dotenv>=1.0
+
+# SSH 远程主机管理
+paramiko>=3.0
+
+# Excel 数据分析图表
+matplotlib>=3.7
+
+# 生产部署可选（二选一）
+# gunicorn>=21.0       # Linux
+# waitress>=3.0        # Windows
