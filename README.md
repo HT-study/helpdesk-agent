@@ -377,11 +377,10 @@ dsh/
 │   ├── hosts.html         # 远程主机页
 │   ├── kb.html            # 知识库页
 │   └── settings.html      # 设置页（多配置管理）
-└── data/
-    ├── llm_settings.json  # LLM 多配置存储
-    ├── checkpoints.sqlite # 对话检查点（LangGraph）
-    ├── kb.sqlite          # 知识库 + 语义索引
-    └── logs/agent.log     # Agent 运行日志
+├── llm_settings.json  # LLM 多配置存储
+├── checkpoints.sqlite # 对话检查点（LangGraph）
+├── kb.sqlite          # 知识库 + 语义索引
+└── logs/agent.log     # Agent 运行日志
 ```
 
 ---
